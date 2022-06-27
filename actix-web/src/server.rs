@@ -492,30 +492,18 @@ where
     }
 
     fn bind2<A: net::ToSocketAddrs>(&self, addr: A) -> io::Result<Vec<net::TcpListener>> {
-        let mut err = None;
-        let mut success = false;
         let mut sockets = Vec::new();
 
         for addr in addr.to_socket_addrs()? {
             match create_tcp_listener(addr, self.backlog) {
                 Ok(lst) => {
-                    success = true;
                     sockets.push(lst);
                 }
-                Err(e) => err = Some(e),
+                Err(e) => return Err(e),
             }
         }
 
-        if success {
-            Ok(sockets)
-        } else if let Some(e) = err.take() {
-            Err(e)
-        } else {
-            Err(io::Error::new(
-                io::ErrorKind::Other,
-                "Can not bind to address.",
-            ))
-        }
+        Ok(sockets)
     }
 
     #[cfg(feature = "openssl")]
